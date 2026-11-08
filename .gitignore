@@ -1,0 +1,7 @@
+build/
+dist/
+sdk/
+addon/native/
+*.dll
+*.lib
+*.pdb

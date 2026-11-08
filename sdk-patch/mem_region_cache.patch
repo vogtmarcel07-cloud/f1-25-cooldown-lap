@@ -1,0 +1,55 @@
+diff --git a/swofty/mem.hpp b/swofty/mem.hpp
+index 0f30f11a..2f175a6f 100644
+--- a/swofty/mem.hpp
++++ b/swofty/mem.hpp
+@@ -112,6 +112,13 @@ inline Image image()
+     return img;
+ }
+ 
++// vmknolle addition (2026-11-02, #44): the big-region answers are also kept in one table for the whole process.
++// The game runs the in-game update on changing job threads, so the per-thread tables started cold on most calls:
++// Race Start 0.37.4 spent ~6 ms per Sess_InGame_UpdateBase call (187-217 ms/s, fps 60 -> 27) in VirtualQuery.
++inline SRWLOCK shared_lock = SRWLOCK_INIT;
++inline Page shared_regions[16];
++inline size_t shared_next = 0;
++
+ inline bool query(uintptr_t at, uintptr_t &hi)
+ {
+     constexpr size_t slots = 64, region_slots = 8;
+@@ -133,6 +140,22 @@ inline bool query(uintptr_t at, uintptr_t &hi)
+             hi = r.hi;
+             return r.ok;
+         }
++    {
++        Page found{};
++        AcquireSRWLockShared(&shared_lock);
++        for (const Page &r : shared_regions)
++            if (r.generation == gen && now - r.stamp < region_ttl_ms && at >= r.lo && at < r.hi) {
++                found = r;
++                break;
++            }
++        ReleaseSRWLockShared(&shared_lock);
++        if (found.hi) {
++            regions[region_next++ % region_slots] = found;
++            e = {page, found.lo, found.hi, found.stamp, gen, found.ok};
++            hi = found.hi;
++            return found.ok;
++        }
++    }
+     MEMORY_BASIC_INFORMATION m{};
+     if (VirtualQuery(reinterpret_cast<const void *>(at), &m, sizeof m) != sizeof m)
+         return false;
+@@ -141,8 +164,12 @@ inline bool query(uintptr_t at, uintptr_t &hi)
+         return false;
+     bool ok = m.State == MEM_COMMIT && (m.Protect & 0xEE) && !(m.Protect & (PAGE_GUARD | PAGE_NOACCESS));
+     e = {page, lo, end, now, gen, ok};
+-    if (end - lo >= big_region)
++    if (end - lo >= big_region) {
+         regions[region_next++ % region_slots] = e;
++        AcquireSRWLockExclusive(&shared_lock);
++        shared_regions[shared_next++ % 16] = e;
++        ReleaseSRWLockExclusive(&shared_lock);
++    }
+     hi = end;
+     return ok;
+ }

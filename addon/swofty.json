@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "id": "vmknolle.cooldown-lap",
+  "name": "Cool-down Lap",
+  "version": "0.36.6",
+  "author": "vmknolle",
+  "description": "After the chequered flag the player keeps driving a cool-down lap to parc ferme; the AI top 3 park there too, with 1/2/3 boards.",
+  "license": "MIT",
+  "category": "utility",
+  "kind": [
+    "native"
+  ],
+  "compat": {
+    "game": "f1_25"
+  },
+  "options": [
+    {
+      "id": "cooldown",
+      "type": "toggle",
+      "label": "Cool-down lap",
+      "description": "After the chequered flag you keep driving until you park in parc ferme (or the time runs out); the podium follows.",
+      "default": true,
+      "binds": "native"
+    },
+    {
+      "id": "cooldown_seconds",
+      "type": "slider",
+      "label": "Cool-down lap: at most (s)",
+      "description": "The cool-down ends on its own after this time. On long tracks the limit grows to a cool-down lap at about 100 km/h plus 90 s.",
+      "min": 30,
+      "max": 600,
+      "step": 10,
+      "default": 300,
+      "binds": "native"
+    },
+    {
+      "id": "cooldown_end",
+      "type": "choice",
+      "label": "Cool-down lap: ends when",
+      "description": "Parked in parc ferme, pit lane entry, or time only.",
+      "values": [
+        {
+          "value": "parc_ferme",
+          "label": "parked in parc ferme"
+        },
+        {
+          "value": "pit_lane",
+          "label": "pit lane entry"
+        },
+        {
+          "value": "time",
+          "label": "time only"
+        }
+      ],
+      "default": "parc_ferme",
+      "binds": "native"
+    },
+    {
+      "id": "park_top3",
+      "type": "toggle",
+      "label": "Cool-down lap: AI top 3 park in parc ferme",
+      "description": "The first three AI cars park in front of the podium too.",
+      "default": true,
+      "binds": "native"
+    },
+    {
+      "id": "pf_marking",
+      "type": "toggle",
+      "label": "Parc ferme marking in the cool-down (prototype)",
+      "description": "Puts the podium's parc ferme floor with the P1/P2/P3 boxes at the track's parc ferme as soon as the cool-down starts, when the game has it loaded. Every try is written to loader.log.",
+      "default": true,
+      "binds": "native"
+    },
+    {
+      "id": "verbose",
+      "type": "toggle",
+      "label": "Log details",
+      "description": "Pit states, controller handovers and phase changes in the loader log.",
+      "default": true,
+      "binds": "native"
+    }
+  ],
+  "operations": {
+    "native": [
+      {
+        "dll": "native/cooldown_lap.dll"
+      }
+    ]
+  },
+  "experimental_features": [
+    "overlay"
+  ],
+  "conflicts": []
+}
